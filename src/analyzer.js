@@ -1225,11 +1225,12 @@ function analyzer(data, sidePass) {
 
         var intPool = [];
         var floatPool = [];
-
+//printErr('func: ' + dump(func));
         func.labels.forEach(function(label) {
           var usesHere = {}; // uses here in this label
           label.lines.forEach(function(line) {
-            if (line.assignTo) usesHere[line.assignTo] = 0;
+            // we can't optimize illegal values or things split out from them
+            if (line.assignTo && line.assignTo.indexOf('$', 1) < 0 && !isIllegalType(line.type)) usesHere[line.assignTo] = 0;
           });
           label.lines.forEach(function(line) {
             walkInterdata(line, function(item) {
