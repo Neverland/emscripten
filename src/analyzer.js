@@ -1247,7 +1247,7 @@ function analyzer(data, sidePass) {
               has = true;
             }
           }
-printErr('pre ' + JSON.stringify(optimizables));
+//printErr('pre ' + JSON.stringify(optimizables));
           if (has) {
             var replacements = {};
             var intIndex = 0, floatIndex = 0;
@@ -1270,7 +1270,7 @@ printErr('pre ' + JSON.stringify(optimizables));
                 intIndex++;
               }
             }
-printErr('post ' + JSON.stringify(replacements));
+//printErr('post ' + JSON.stringify(replacements));
             label.lines.forEach(function(line) {
               if (replacements[line.assignTo]) line.assignTo = replacements[line.assignTo];
               walkInterdata(line, function(item) {
