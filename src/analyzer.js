@@ -1256,6 +1256,7 @@ printErr('pre ' + JSON.stringify(optimizables));
                   floatPool.push(v); // new var, no need to replace it
                 } else {
                   replacements[v] = floatPool[floatIndex];
+                  delete func.variables[v];
                 }
                 floatIndex++;
               } else {
@@ -1263,6 +1264,7 @@ printErr('pre ' + JSON.stringify(optimizables));
                   intPool.push(v); // new var, no need to replace it
                 } else {
                   replacements[v] = intPool[intIndex];
+                  delete func.variables[v];
                 }
                 intIndex++;
               }

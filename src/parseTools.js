@@ -2586,9 +2586,7 @@ function addVariable(ident, type, funcData) {
   funcData = funcData || Framework.currItem.funcData;
   assert(type);
   var old = funcData.variables[ident];
-  if (old) {
-    assert(old.type === type);
-  } else {
+  if (!old) {
     funcData.variables[ident] = {
       ident: ident,
       type: type,
