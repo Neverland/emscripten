@@ -1218,6 +1218,67 @@ function analyzer(data, sidePass) {
         }
         if (dcheck('vars')) dprint('// var ' + vname + ': ' + JSON.stringify(variable));
       }
+
+      if (!RUNNING_JS_OPTS && ASM_JS) {
+        // Consolidate variables in a simple and quick way: if a variable is only ever used
+        // in a single block, make it use registers from a function-scope pool
+
+        var intPool = [];
+        var floatPool = [];
+
+        func.labels.forEach(function(label) {
+          var usesHere = {}; // uses here in this label
+          label.lines.forEach(function(line) {
+            if (line.assignTo) usesHere[line.assignTo] = 0;
+          });
+          label.lines.forEach(function(line) {
+            walkInterdata(line, function(item) {
+              if (item.intertype === 'value' && item.ident in usesHere) {
+                usesHere[item.ident]++;
+              }
+            });
+          });
+          var optimizables = {}, has = false
+          for (var v in usesHere) {
+            assert(v in func.variables);
+            if (usesHere[v] === func.variables[v].uses) {
+              optimizables[v] = 0;
+              has = true;
+            }
+          }
+printErr('pre ' + JSON.stringify(optimizables));
+          if (has) {
+            var replacements = {};
+            var intIndex = 0, floatIndex = 0;
+            for (var v in optimizables) {
+              if (func.variables[v].type in Runtime.FLOAT_TYPES) {
+                if (floatIndex >= floatPool.length) {
+                  floatPool.push(v); // new var, no need to replace it
+                } else {
+                  replacements[v] = floatPool[floatIndex];
+                }
+                floatIndex++;
+              } else {
+                if (intIndex >= intPool.length) {
+                  intPool.push(v); // new var, no need to replace it
+                } else {
+                  replacements[v] = intPool[intIndex];
+                }
+                intIndex++;
+              }
+            }
+printErr('post ' + JSON.stringify(replacements));
+            label.lines.forEach(function(line) {
+              if (replacements[line.assignTo]) line.assignTo = replacements[line.assignTo];
+              walkInterdata(line, function(item) {
+                if (item.intertype === 'value' && replacements[item.ident]) {
+                  item.ident = replacements[item.ident];
+                }
+              });
+            });
+          }
+        });
+      }
     });
   }
 
